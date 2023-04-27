@@ -1,76 +1,122 @@
-import { Formik, Form, Field } from 'formik';
-import * as Yup from 'yup';
-import css from './ContactForm.module.css';
+import { useState, useEffect } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
-import { getContacts } from 'redux/contacts/selectors';
+import styles from './ContactForm.module.css';
 import { addContact } from 'redux/contacts/operations';
+import { selectContacts } from 'redux/contacts/selectors';
+import { validateName, validateNumber } from 'components/Validations';
+import toast from 'react-hot-toast';
 
 const ContactForm = () => {
-  const contacts = useSelector(getContacts);
+  const [name, setName] = useState('');
+  const [number, setNumber] = useState('');
+  const [nameError, setNameError] = useState(false);
+  const [numberError, setNumberError] = useState(false);
 
   const dispatch = useDispatch();
+  const contacts = useSelector(selectContacts);
 
-  const handleSubmit = values => {
-    const { name, phone } = values;
-   
-    if (
-      (contacts.length > 0) &
-      contacts.some(
-        contact => contact.name.toLowerCase() === name.toLowerCase()
-      )
-    ) {
-      return alert(`${name} is already in contacts!`);
+  const checkContact = value => {
+    const isInContacts = contacts.some(
+      ({ name }) => name.toLowerCase() === value.toLowerCase()
+    );
+    return isInContacts;
+  };
+
+  useEffect(() => {
+    if (name === '') {
+      return;
+    }
+    if (!validateName(name.trim())) {
+      setNameError(true);
     } else {
-      dispatch(addContact({name, phone}));
+      setNameError(false);
+    }
+  }, [name]);
+
+  useEffect(() => {
+    if (number === '') {
+      return;
+    }
+    if (!validateNumber(number.trim())) {
+      setNumberError(true);
+    } else {
+      setNumberError(false);
+    }
+  }, [number]);
+
+  const handleSubmit = e => {
+    e.preventDefault();
+    if (checkContact(name)) {
+      return toast.error(`${name} is already in contacts.`);
+    }
+    if (
+      nameError ||
+      numberError ||
+      name.trim() === '' ||
+      number.trim() === ''
+    ) {
+      setNameError(true);
+      setNumberError(true);
+      return;
+    }
+    dispatch(addContact({ name, number }));
+    reset();
+  };
+
+  const handleChange = e => {
+    const { name, value } = e.currentTarget;
+    switch (name) {
+      case 'name':
+        setName(value);
+        break;
+      case 'number':
+        setNumber(value);
+        break;
+      default:
+        return;
     }
   };
 
-  const validationSchema = Yup.object({
-    name: Yup.string()
-      .matches(
-        /^[a-zA-Zа-яА-Я]+(([' -][a-zA-Zа-яА-Я ])?[a-zA-Zа-яА-Я]*)*$/,
-        "Name may contain only letters, apostrophe, dash and spaces. For example Adrian, Jacob Mercer, Charles de Batz de Castelmore d'Artagnan"
-      )
-      .required('Name is required'),
-    phone: Yup.string()
-      .matches(
-        /^\+?\d{1,4}?[-.\s]?\(?\d{1,3}?\)?[-.\s]?\d{1,4}[-.\s]?\d{1,4}[-.\s]?\d{1,9}$/,
-        'Phone number must be digits and can contain spaces, dashes, parentheses and can start with +'
-      )
-      .required('Phone number is required'),
-  });
+  const reset = () => {
+    setName('');
+    setNumber('');
+  };
 
   return (
-    <Formik
-      initialValues={{ name: '', phone: '' }}
-      validationSchema={validationSchema}
-      onSubmit={(values, { resetForm }) => {
-        handleSubmit(values);
-        resetForm();
-      }}
-    >
-      {({ errors, touched }) => (
-        <Form className={css.form} autoComplete="off">
-          <label className={css.label}>
-            Name
-            <Field type="text" name="name" className={css.input} required />
-            {errors.name && touched.name && (
-              <div className={css.error}>{errors.name}</div>
-            )}
-          </label>
-          <label className={css.label}>
-            Number
-            <Field type="tel" name="phone" className={css.input} required />
-            {errors.number && touched.number && (
-              <div className={css.error}>{errors.number}</div>
-            )}
-          </label>
-          <button type="submit" className={css.button}>
-            Add contact
-          </button>
-        </Form>
-      )}
-    </Formik>
+    <>
+    <h1 className={styles.title}>Phonebook</h1>
+    <form className={styles.form} autoComplete="off" onSubmit={handleSubmit}>
+      <label className={styles.label}>
+        Name
+        <input
+          type="text"
+          name="name"
+          value={name}
+          onChange={handleChange}
+          className={nameError ? styles.inputError : styles.input}
+          required
+        />
+        {nameError && <div className={styles.inputError}>Invalid name</div>}
+      </label>
+      <label className={styles.label}>
+        Number
+        <input
+          type="tel"
+          name="number"
+          value={number}
+          onChange={handleChange}
+          className={numberError ? styles.inputError : styles.input}
+          required
+        />
+        {numberError && (
+          <div className={styles.errorMessage}>Invalid number</div>
+        )}
+      </label>
+      <button type="submit" className={styles.button}>
+        Add contact
+      </button>
+    </form>
+    </>
   );
 };
 

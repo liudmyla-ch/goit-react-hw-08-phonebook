@@ -1,3 +1,4 @@
+import React from 'react';
 import { Helmet } from 'react-helmet';
 import { RegisterForm } from 'components/register-form/RegisterForm';
 

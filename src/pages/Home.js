@@ -1,3 +1,5 @@
+import React from "react";
+
 const styles = {
     container: {
       minHeight: 'calc(100vh - 50px)',
@@ -16,7 +18,7 @@ const styles = {
     return (
       <div style={styles.container}>
         <h1 style={styles.title}>
-          Task manager welcome page{' '}
+          Hello! Welcome to Contacts App{' '}
           <span role="img" aria-label="Greeting icon">
             💁‍♀️
           </span>
