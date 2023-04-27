@@ -24,15 +24,13 @@ export const Contacts = () => {
     <>
       <ContactForm />
 
-      <>
-        {isLoading && !error && <b>Request in progress...</b>}
-        {contacts?.length > 0 && (
-          <>
-            <Filter />
-            <ContactList />
-          </>
-        )}
-      </>
+      {isLoading && !error && <b>Request in progress...</b>}
+      {contacts?.length > 0 && (
+        <>
+          <Filter />
+          <ContactList />
+        </>
+      )}
     </>
   );
 };
